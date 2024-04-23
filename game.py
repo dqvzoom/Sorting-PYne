@@ -82,6 +82,8 @@ class Box(pygame.sprite.Sprite):
         if not self.sorted:
             if direction == [1, 0, 0]:
                 if self.rect.y <= 290:
+                    self.rect.y = 290
+                    self.sorted = True
                     
     
     def update(self):
