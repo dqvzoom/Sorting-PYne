@@ -6,7 +6,7 @@ pygame.init()
 screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
 dt = 0
 game_state = "title"
-movement_speed = 500  
+movement_speed = 200
 
 class Background(pygame.sprite.Sprite):
     def __init__(self):
@@ -57,10 +57,10 @@ class Arrow(pygame.sprite.Sprite):
         if direction[0] == 1:
             pygame.transform.rotate(self.image, 0)
             self.rect.topleft = (856, 304)
-        if direction[1] == 1:
+        elif direction[1] == 1:
             self.image = pygame.transform.rotate(self.image, 270)
-            self.rect.topleft = (872, 280)
-        if direction[2] == 1:
+            self.rect.topleft = (872, 272)
+        elif direction[2] == 1:
             self.image = pygame.transform.rotate(self.image, 180)
             self.rect.topleft = (856, 304)
     
@@ -71,23 +71,68 @@ class Box(pygame.sprite.Sprite):
     def __init__(self, color):
         super().__init__()
         # Color: Green = 1, Blue = 2, Yellow = 3
-        global box_color
-        box_color = color
+        self.box_color = color
         self.image = pygame.image.load("assets\\box{}.png".format(color))
-        self.rect = self.image.get_rect(bottomleft = (880, 1080))
+        self.rect = self.image.get_rect(topleft = (880, 1240))
         self.sorted = False
+        self.new_spawned = False
     
     def movement(self):
-        self.rect.y -= movement_speed * dt
+        # Movement before sorting and locking it in as sorted at right Y position
         if not self.sorted:
-            if direction == [1, 0, 0]:
-                if self.rect.y <= 290:
-                    self.rect.y = 290
-                    self.sorted = True
-                    
+            self.rect.y -= movement_speed * dt
+            if self.rect.y <= 288:
+                self.rect.y = 296
+                self.sorted = True
+                self.sorted_direction = direction.index(1)
+        # Movement after sorting
+        else:
+            if self.sorted_direction == 0:
+                self.rect.x -= movement_speed * dt
+            elif self.sorted_direction == 1:
+                self.rect.y -= movement_speed * dt
+            elif self.sorted_direction == 2:
+                self.rect.x += movement_speed * dt
     
+    def spawn_new(self):
+        # Spawn new box after current box passes certain position
+        if self.sorted:
+            if not self.new_spawned:
+                if self.sorted_direction == 0:
+                    if self.rect.x <= 456:
+                        pygame.event.post(box_event)
+                        self.new_spawned = True
+                elif self.sorted_direction == 1:
+                    if self.rect.y <= 120:
+                        pygame.event.post(box_event)
+                        self.new_spawned = True
+                elif self.sorted_direction == 2:
+                    if self.rect.x >= 1416:
+                        pygame.event.post(box_event)
+                        self.new_spawned = True
+    
+    def despawn(self):
+        if self.sorted:
+            if self.sorted_direction == 0:
+                if self.rect.x <= -160:
+                    if not self.box_color == 1:
+                        pass
+                    self.kill()
+            elif self.sorted_direction == 1:
+                if self.rect.y <= -160:
+                    if not self.box_color == 2:
+                        pass
+                    self.kill()
+            elif self.sorted_direction == 2:
+                if self.rect.x >= 2080:
+                    if not self.box_color == 3:
+                        pass
+                    self.kill()
+                
     def update(self):
         self.movement()
+        self.spawn_new()
+        self.despawn()
 
 
 def fullscreen():
@@ -96,6 +141,14 @@ def fullscreen():
     else:
         game_surface_scaled = pygame.transform.scale(game_surface(screen.get_width() / 1.77777777778, screen.get_width()))
     screen.blit(game_surface_scaled, (0,0))
+
+def start_game():
+    global game_state
+    game_state = "game"
+    global score
+    score = 0
+    pygame.time.set_timer(box_event, 1000, 1)
+
 
 # Create surface to blit the game onto
 game_surface = pygame.Surface((1920, 1080))
@@ -120,7 +173,7 @@ title_surf = pygame.image.load("assets\\title_screen.png").convert_alpha()
 title_text_surf = pygame.image.load("assets\\title_text.png").convert_alpha()
 text_timer = 0
 
-# Event timers
+# Events
 box_event = pygame.event.Event(pygame.USEREVENT, attr1 = "box_event")
 
 # Game loop
@@ -139,19 +192,22 @@ while True:
                     direction = [0, 1, 0]
                 if event.key in (pygame.K_d, pygame.K_RIGHT):
                     direction = [0, 0, 1]
-            
+            # User events
             if event == box_event:
                 box_group.add(Box(randint(1,3)))
+                score += 1
+                if movement_speed <= 1500:
+                    movement_speed += 26
+
         
         
         # Events during title screen
         if game_state == "title":
             if event.type in (pygame.KEYDOWN, pygame.MOUSEBUTTONDOWN):
-                game_state = "game"
-                pygame.event.post(box_event)
+                start_game()
     
-    # Draw and update classes during game
     if game_state == "game":
+        # Draw and update classes during game
         background.draw(game_surface)
         background.update()
 
@@ -160,6 +216,7 @@ while True:
 
         box_group.draw(game_surface)
         box_group.update()
+
 
     
     # Display title screen
