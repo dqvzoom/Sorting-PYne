@@ -6,6 +6,7 @@ pygame.init()
 screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
 dt = 0
 game_state = "title"
+movement_speed = 500  
 
 class Background(pygame.sprite.Sprite):
     def __init__(self):
@@ -58,7 +59,7 @@ class Arrow(pygame.sprite.Sprite):
             self.rect.topleft = (856, 304)
         if direction[1] == 1:
             self.image = pygame.transform.rotate(self.image, 270)
-            self.rect.topleft = (856, 280)
+            self.rect.topleft = (872, 280)
         if direction[2] == 1:
             self.image = pygame.transform.rotate(self.image, 180)
             self.rect.topleft = (856, 304)
@@ -68,9 +69,24 @@ class Arrow(pygame.sprite.Sprite):
 
 class Box(pygame.sprite.Sprite):
     def __init__(self, color):
+        super().__init__()
         # Color: Green = 1, Blue = 2, Yellow = 3
-        self.box = pygame.image.load("assets\\box{}.png".format(color + 1))
-        self.rect = self.box.get_rect(bottomleft = (880, 1080))
+        global box_color
+        box_color = color
+        self.image = pygame.image.load("assets\\box{}.png".format(color))
+        self.rect = self.image.get_rect(bottomleft = (880, 1080))
+        self.sorted = False
+    
+    def movement(self):
+        self.rect.y -= movement_speed * dt
+        if not self.sorted:
+            if direction == [1, 0, 0]:
+                if self.rect.y <= 290:
+                    
+    
+    def update(self):
+        self.movement()
+
 
 def fullscreen():
     if smallest_side == 1:
@@ -103,7 +119,7 @@ title_text_surf = pygame.image.load("assets\\title_text.png").convert_alpha()
 text_timer = 0
 
 # Event timers
-box_timer = pygame.USEREVENT + 1
+box_event = pygame.event.Event(pygame.USEREVENT, attr1 = "box_event")
 
 # Game loop
 while True:
@@ -122,15 +138,15 @@ while True:
                 if event.key in (pygame.K_d, pygame.K_RIGHT):
                     direction = [0, 0, 1]
             
-            # if event.type == box_timer:
-                # box_group.add(Box(1))
+            if event == box_event:
+                box_group.add(Box(randint(1,3)))
         
         
         # Events during title screen
         if game_state == "title":
             if event.type in (pygame.KEYDOWN, pygame.MOUSEBUTTONDOWN):
                 game_state = "game"
-                pygame.time.set_timer(box_timer, 10000)
+                pygame.event.post(box_event)
     
     # Draw and update classes during game
     if game_state == "game":
@@ -139,6 +155,10 @@ while True:
 
         arrow.draw(game_surface)
         arrow.update()
+
+        box_group.draw(game_surface)
+        box_group.update()
+
     
     # Display title screen
     elif game_state == "title":
