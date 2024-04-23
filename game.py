@@ -55,10 +55,13 @@ class Arrow(pygame.sprite.Sprite):
         self.image = self.arrow_frames[int(self.arrow_index)]
         if direction[0] == 1:
             pygame.transform.rotate(self.image, 0)
+            self.rect.topleft = (856, 304)
         if direction[1] == 1:
             self.image = pygame.transform.rotate(self.image, 270)
+            self.rect.topleft = (856, 280)
         if direction[2] == 1:
             self.image = pygame.transform.rotate(self.image, 180)
+            self.rect.topleft = (856, 304)
     
     def update(self):
         self.animation_state()
@@ -112,15 +115,15 @@ while True:
                 if event.key == pygame.K_SPACE:
                     pygame.quit()
                     exit()
-                if event.key == pygame.K_a:
+                if event.key in (pygame.K_a, pygame.K_LEFT) :
                     direction = [1, 0, 0]
-                if event.key == pygame.K_w:
+                if event.key in (pygame.K_w, pygame.K_UP):
                     direction = [0, 1, 0]
-                if event.key == pygame.K_d:
+                if event.key in (pygame.K_d, pygame.K_RIGHT):
                     direction = [0, 0, 1]
             
-            if event.type == box_timer:
-                box_group.add(Box(randint(0, 2)))
+            # if event.type == box_timer:
+                # box_group.add(Box(1))
         
         
         # Events during title screen
