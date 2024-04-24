@@ -117,18 +117,36 @@ class Box(pygame.sprite.Sprite):
         if self.sorted:
             if self.sorted_direction == 0:
                 if self.rect.x <= -160:
+                    if self.box_color == 6:
+                        health += 2
+                        print(health)
+                        print(self.box_color)
                     if not self.box_color == 1:
                         health -= 1
+                        print(health)
+                        print(self.box_color)
                     self.kill()
             elif self.sorted_direction == 1:
                 if self.rect.y <= -160:
+                    if self.box_color == 5:
+                        health += 2
+                        print(health)
+                        print(self.box_color)
                     if not self.box_color == 2:
                         health -= 1
+                        print(health)
+                        print(self.box_color)
                     self.kill()
             elif self.sorted_direction == 2:
                 if self.rect.x >= 2080:
+                    if self.box_color == 6:
+                        health += 2
+                        print(health)
+                        print(self.box_color)
                     if not self.box_color == 3:
                         health -= 1
+                        print(health)
+                        print(self.box_color)
                     self.kill()
                 
     def update(self):
@@ -153,7 +171,7 @@ def start_game():
     health = 2
     pygame.time.set_timer(box_event, 1000, 1)
     global movement_speed
-    movement_speed = 200
+    movement_speed = 150
 
 
 def check_game_over():
@@ -226,10 +244,17 @@ while True:
                     direction = [0, 0, 1]
             # User events
             if event == box_event:
-                box_group.add(Box(randint(1,3)))
+                if health == 2:
+                    box_group.add(Box(randint(1,3)))
+                else:
+                    if randint(1, 2) == 1:
+                        box_group.add(Box(randint(4,6)))
+                    else:
+                        box_group.add(Box(randint(1,3)))
                 score += 1
-                if movement_speed <= 1500:
-                    movement_speed += 26
+                # print(score)
+                if movement_speed <= 1600:
+                    movement_speed += 20
 
     
         # Events during title screen
