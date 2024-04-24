@@ -161,23 +161,6 @@ def fullscreen():
         game_surface_scaled = pygame.transform.scale(game_surface(screen.get_width() / 1.77777777778, screen.get_width()))
     screen.blit(game_surface_scaled, (0,0))
 
-def start_game():
-    global game_state
-    game_state = "game"
-    global score
-    score = 0
-    global health
-    health = 2
-    pygame.time.set_timer(box_event, 1000, 1)
-    global movement_speed
-    movement_speed = 150
-    global last_health
-    last_health = False
-    global direction
-    direction = [0, 1, 0]
-    global game_over
-    game_over = False
-
 
 def check_game_over():
     global health
@@ -221,23 +204,33 @@ heart1_rect = heart1_surf.get_rect(topright = (1888, 32))
 heart2_rect = heart2_surf.get_rect(topright = (1760, 32))
 
 menu_surf = pygame.image.load("assets\\main_menu.png").convert_alpha()
-menu_text_surf = pygame.image.load("assets\\menu_text.png").convert_alpha()
-menu_text_start_surf = pygame.image.load("assets\\menu_text_start.png").convert_alpha()
-menu_text_timer = 50
 
-game_over_surf = pygame.image.load("assets\\game_over.png")
+game_over_surf = pygame.image.load("assets\\game_over.png").convert_alpha()
 
 pixel_font = pygame.font.Font("fonts\\pixeltype.ttf", 170)
 
 score_text = pixel_font.render("Score: {}".format(score), False, (0,0,0))
 score_text_rect = score_text.get_rect(topleft = ((32,32)))
 
+# Menu buttons
+play_button_1 = pygame.image.load("assets\\play_button1.png").convert_alpha()
+play_button_2 = pygame.image.load("assets\\play_button2.png").convert_alpha()
+play_button_frames = [play_button_1, play_button_2]
+play_button_index = 0
+play_button_rect = play_button_1.get_rect(topleft = (600, 800))
+
+hard_button_1 = pygame.image.load("assets\\hard_button1.png").convert_alpha()
+hard_button_2 = pygame.image.load("assets\\hard_button2.png").convert_alpha()
+hard_button_frames = [hard_button_1, hard_button_2]
+hard_button_index = 0
+hard_button_rect = play_button_1.get_rect(topleft = (984, 800))
 
 # Events
 box_event = pygame.event.Event(pygame.USEREVENT, attr1 = "box_event")
 
 # Game loop
 while True:
+    hard_button_index = 0
     # Event loop
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -279,12 +272,25 @@ while True:
         
         # Events during menu screen
         if game_state == "menu":
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    start_game()
-                if event.key == pygame.K_ESCAPE:
-                    pygame.quit()
-                    exit()
+            # Check play button press and start game
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if play_button_rect.collidepoint(pygame.mouse.get_pos()):
+                    play_button_index = 1
+            if event.type == pygame.MOUSEBUTTONUP:
+                if play_button_rect.collidepoint(pygame.mouse.get_pos()):
+                    game_state = "game"
+                    score = 0
+                    health = 2
+                    pygame.time.set_timer(box_event, 1000, 1)
+                    movement_speed = 150
+                    last_health = False
+                    direction = [0, 1, 0]
+                    game_over = False
+                else:
+                    play_button_index = 0
+            # if event.key == pygame.K_ESCAPE:
+            #     pygame.quit()
+            #     exit()
         
         # Events during game over screen
         if game_state == "dead":
@@ -326,15 +332,9 @@ while True:
     # Display menu screen
     elif game_state == "menu":
         game_surface.blit(menu_surf, (0,0))
-        if menu_text_timer < 100:
-            if menu_text_timer > 50:
-                if last_score == 0:
-                    game_surface.blit(menu_text_start_surf, (456, 920))
-                else:
-                    game_surface.blit(menu_text_surf, (352, 920))
-            menu_text_timer += (100 * dt)
-        else:
-            menu_text_timer = 0
+        game_surface.blit(play_button_frames[play_button_index], play_button_rect)
+        game_surface.blit(hard_button_frames[hard_button_index], hard_button_rect)
+
     
     # Display game over screen
     elif game_state == "dead":
