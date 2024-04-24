@@ -7,14 +7,15 @@ screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
 dt = 0
 game_state = "title"
 movement_speed = 200
+last_score = 0
 
 class Background(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        background_1 = pygame.image.load("assets\conveyor1.png").convert_alpha()
-        background_2 = pygame.image.load("assets\conveyor2.png").convert_alpha()
-        background_3 = pygame.image.load("assets\conveyor3.png").convert_alpha()
-        background_4 = pygame.image.load("assets\conveyor4.png").convert_alpha()
+        background_1 = pygame.image.load("assets\\conveyor1.png").convert_alpha()
+        background_2 = pygame.image.load("assets\\conveyor2.png").convert_alpha()
+        background_3 = pygame.image.load("assets\\conveyor3.png").convert_alpha()
+        background_4 = pygame.image.load("assets\\conveyor4.png").convert_alpha()
         self.background_frames = [background_1, background_2, background_3, background_4]
         self.background_index = 0
         self.image = self.background_frames[self.background_index]
@@ -88,11 +89,11 @@ class Box(pygame.sprite.Sprite):
         # Movement after sorting
         else:
             if self.sorted_direction == 0:
-                self.rect.x -= movement_speed * dt
+                self.rect.x -= (movement_speed * 1.1) * dt
             elif self.sorted_direction == 1:
                 self.rect.y -= movement_speed * dt
             elif self.sorted_direction == 2:
-                self.rect.x += movement_speed * dt
+                self.rect.x += (movement_speed * 1.1) * dt
     
     def spawn_new(self):
         # Spawn new box after current box passes certain position
@@ -103,7 +104,7 @@ class Box(pygame.sprite.Sprite):
                         pygame.event.post(box_event)
                         self.new_spawned = True
                 elif self.sorted_direction == 1:
-                    if self.rect.y <= 120:
+                    if self.rect.y <= 0:
                         pygame.event.post(box_event)
                         self.new_spawned = True
                 elif self.sorted_direction == 2:
@@ -112,21 +113,22 @@ class Box(pygame.sprite.Sprite):
                         self.new_spawned = True
     
     def despawn(self):
+        global health
         if self.sorted:
             if self.sorted_direction == 0:
                 if self.rect.x <= -160:
                     if not self.box_color == 1:
-                        pass
+                        health -= 1
                     self.kill()
             elif self.sorted_direction == 1:
                 if self.rect.y <= -160:
                     if not self.box_color == 2:
-                        pass
+                        health -= 1
                     self.kill()
             elif self.sorted_direction == 2:
                 if self.rect.x >= 2080:
                     if not self.box_color == 3:
-                        pass
+                        health -= 1
                     self.kill()
                 
     def update(self):
@@ -147,7 +149,21 @@ def start_game():
     game_state = "game"
     global score
     score = 0
+    global health
+    health = 2
     pygame.time.set_timer(box_event, 1000, 1)
+    global movement_speed
+    movement_speed = 200
+
+
+def check_game_over():
+    global health
+    if health == 0: 
+        global game_state
+        game_state = "dead"
+        global score
+        return score
+    
 
 
 # Create surface to blit the game onto
@@ -168,10 +184,23 @@ arrow.add(Arrow())
 
 box_group = pygame.sprite.Group()
 
-# Title screen 
+# UI 
 title_surf = pygame.image.load("assets\\title_screen.png").convert_alpha()
 title_text_surf = pygame.image.load("assets\\title_text.png").convert_alpha()
-text_timer = 0
+title_text_timer = 50
+
+heart1_surf = pygame.image.load("assets\\heart.png").convert_alpha()
+heart2_surf = pygame.image.load("assets\\heart.png").convert_alpha()
+heart1_rect = heart1_surf.get_rect(topright = (1888, 32))
+heart2_rect = heart2_surf.get_rect(topright = (1760, 32))
+
+menu_surf = pygame.image.load("assets\\main_menu.png").convert_alpha()
+menu_text_surf = pygame.image.load("assets\\menu_text.png").convert_alpha()
+menu_text_start_surf = pygame.image.load("assets\\menu_text_start.png").convert_alpha()
+menu_text_timer = 50
+
+game_over_surf = pygame.image.load("assets\\game_over.png")
+
 
 # Events
 box_event = pygame.event.Event(pygame.USEREVENT, attr1 = "box_event")
@@ -180,6 +209,9 @@ box_event = pygame.event.Event(pygame.USEREVENT, attr1 = "box_event")
 while True:
     # Event loop
     for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            exit()
         # Events during game
         if game_state == "game":
             if event.type == pygame.KEYDOWN:
@@ -199,12 +231,26 @@ while True:
                 if movement_speed <= 1500:
                     movement_speed += 26
 
-        
-        
+    
         # Events during title screen
         if game_state == "title":
-            if event.type in (pygame.KEYDOWN, pygame.MOUSEBUTTONDOWN):
-                start_game()
+            if event.type in (pygame.KEYUP, pygame.MOUSEBUTTONDOWN):
+                game_state = "menu"
+        
+        # Events during menu screen
+        if game_state == "menu":
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    start_game()
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    exit()
+        
+        # Events during game over screen
+        if game_state == "dead":
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_SPACE:
+                    game_state = "menu"
     
     if game_state == "game":
         # Draw and update classes during game
@@ -217,18 +263,39 @@ while True:
         box_group.draw(game_surface)
         box_group.update()
 
+        
+        game_surface.blit(heart1_surf, heart1_rect)
+        if health == 2: game_surface.blit(heart2_surf, heart2_rect)
+
+        last_score = check_game_over()
 
     
     # Display title screen
     elif game_state == "title":
         game_surface.blit(title_surf, (0, 0))
-        if text_timer < 100:
-            if text_timer > 50:
+        if title_text_timer < 100:
+            if title_text_timer > 50:
                 game_surface.blit(title_text_surf, (480, 936))
-            text_timer += (100 * dt)
+            title_text_timer += (100 * dt)
         else:
-            text_timer = 0
-
+            title_text_timer = 0
+    
+    # Display menu screen
+    elif game_state == "menu":
+        game_surface.blit(menu_surf, (0,0))
+        if menu_text_timer < 100:
+            if menu_text_timer > 50:
+                if last_score == 0:
+                    game_surface.blit(menu_text_start_surf, (456, 920))
+                else:
+                    game_surface.blit(menu_text_surf, (352, 920))
+            menu_text_timer += (100 * dt)
+        else:
+            menu_text_timer = 0
+    
+    # Display game over screen
+    elif game_state == "dead":
+        game_surface.blit(game_over_surf, (0,0))
 
 
     fullscreen()
