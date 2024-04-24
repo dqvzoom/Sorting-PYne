@@ -117,36 +117,30 @@ class Box(pygame.sprite.Sprite):
         if self.sorted:
             if self.sorted_direction == 0:
                 if self.rect.x <= -160:
-                    if self.box_color == 6:
+                    if self.box_color == 4:
                         health += 2
                         print(health)
-                        print(self.box_color)
                     if not self.box_color == 1:
                         health -= 1
                         print(health)
-                        print(self.box_color)
                     self.kill()
             elif self.sorted_direction == 1:
                 if self.rect.y <= -160:
                     if self.box_color == 5:
                         health += 2
                         print(health)
-                        print(self.box_color)
                     if not self.box_color == 2:
                         health -= 1
                         print(health)
-                        print(self.box_color)
                     self.kill()
             elif self.sorted_direction == 2:
                 if self.rect.x >= 2080:
                     if self.box_color == 6:
                         health += 2
                         print(health)
-                        print(self.box_color)
                     if not self.box_color == 3:
                         health -= 1
                         print(health)
-                        print(self.box_color)
                     self.kill()
                 
     def update(self):
@@ -172,6 +166,8 @@ def start_game():
     pygame.time.set_timer(box_event, 1000, 1)
     global movement_speed
     movement_speed = 150
+    global last_health
+    last_health = False
 
 
 def check_game_over():
@@ -220,6 +216,8 @@ menu_text_timer = 50
 game_over_surf = pygame.image.load("assets\\game_over.png")
 
 
+
+
 # Events
 box_event = pygame.event.Event(pygame.USEREVENT, attr1 = "box_event")
 
@@ -244,10 +242,12 @@ while True:
                     direction = [0, 0, 1]
             # User events
             if event == box_event:
-                if health == 2:
+                if health == 2 or last_health == True:
+                    last_health = False
                     box_group.add(Box(randint(1,3)))
-                else:
+                elif last_health  == False:
                     if randint(1, 2) == 1:
+                        last_health = True
                         box_group.add(Box(randint(4,6)))
                     else:
                         box_group.add(Box(randint(1,3)))
@@ -325,4 +325,4 @@ while True:
 
     fullscreen()
     pygame.display.update()
-    dt = clock.tick(0) / 1000
+    dt = clock.tick(60) / 1000
