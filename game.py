@@ -4,10 +4,13 @@ from random import randint
 
 pygame.init()
 screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
+pygame.display.set_caption("Sorting PYne")
 dt = 0
 game_state = "title"
 movement_speed = 200
 last_score = 0
+score = 0
+
 
 class Background(pygame.sprite.Sprite):
     def __init__(self):
@@ -142,11 +145,13 @@ class Box(pygame.sprite.Sprite):
                         health -= 1
                         print(health)
                     self.kill()
+        if health == 0: self.kill()
                 
     def update(self):
         self.movement()
         self.spawn_new()
         self.despawn()
+
 
 
 def fullscreen():
@@ -168,6 +173,10 @@ def start_game():
     movement_speed = 150
     global last_health
     last_health = False
+    global direction
+    direction = [0, 1, 0]
+    global game_over
+    game_over = False
 
 
 def check_game_over():
@@ -175,8 +184,11 @@ def check_game_over():
     if health == 0: 
         global game_state
         game_state = "dead"
+        global game_over
+        game_over = True
         global score
         return score
+        
     
 
 
@@ -215,7 +227,10 @@ menu_text_timer = 50
 
 game_over_surf = pygame.image.load("assets\\game_over.png")
 
+pixel_font = pygame.font.Font("fonts\\pixeltype.ttf", 170)
 
+score_text = pixel_font.render("Score: {}".format(score), False, (0,0,0))
+score_text_rect = score_text.get_rect(topleft = ((32,32)))
 
 
 # Events
@@ -288,9 +303,12 @@ while True:
         box_group.draw(game_surface)
         box_group.update()
 
-        
+        # Blit UI elements
         game_surface.blit(heart1_surf, heart1_rect)
         if health == 2: game_surface.blit(heart2_surf, heart2_rect)
+
+        score_text = pixel_font.render("Score: {}".format(score), False, (0,0,0))
+        game_surface.blit(score_text, score_text_rect)
 
         last_score = check_game_over()
 
