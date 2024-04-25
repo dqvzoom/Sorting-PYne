@@ -53,7 +53,7 @@ class Arrow(pygame.sprite.Sprite):
         self.arrow_frames = [arrow_1, arrow_2, arrow_3, arrow_4, arrow_5, arrow_6, arrow_7, arrow_8, arrow_9, arrow_10, arrow_11, arrow_12]
         self.arrow_index = 0
         self.image = self.arrow_frames[self.arrow_index]
-        self.rect = self.image.get_rect(topleft = (856, 304))
+        self.rect = self.image.get_rect(topleft = (856, 288))
         global direction
         direction = [0, 1, 0]
     
@@ -63,13 +63,13 @@ class Arrow(pygame.sprite.Sprite):
         self.image = self.arrow_frames[int(self.arrow_index)]
         if direction[0] == 1:
             pygame.transform.rotate(self.image, 0)
-            self.rect.topleft = (856, 304)
+            self.rect.topleft = (856, 288)
         elif direction[1] == 1:
             self.image = pygame.transform.rotate(self.image, 270)
             self.rect.topleft = (872, 272)
         elif direction[2] == 1:
             self.image = pygame.transform.rotate(self.image, 180)
-            self.rect.topleft = (856, 304)
+            self.rect.topleft = (856, 288)
     
     def update(self):
         self.animation_state()
