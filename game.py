@@ -230,6 +230,9 @@ hard_button_frames = [hard_button_1, hard_button_2]
 hard_button_index = 0
 hard_button_rect = play_button_1.get_rect(topleft = (984, 800))
 
+close_button = pygame.image.load("assets\\close_button.png").convert_alpha()
+close_button_rect = close_button.get_rect(topleft = (1792, 72))
+
 # Pause screen
 pause_surf = pygame.image.load("assets\\pause_screen.png").convert_alpha()
 
@@ -304,6 +307,9 @@ while True:
                     play_button_index = 1
                 if hard_button_rect.collidepoint(scaled_pos):
                     hard_button_index = 1
+                if close_button_rect.collidepoint(scaled_pos):
+                    pygame.quit()
+                    quit()
             elif event.type == pygame.MOUSEBUTTONUP:
                 if play_button_rect.collidepoint(scaled_pos):
                     game_state = "game"
@@ -410,6 +416,7 @@ while True:
         hard_high_score_text = pixel_font.render("Hard score:  {}".format(str(hard_high_score)), False, (0,0,0))
         game_surface.blit(high_score_text, (936, 128))
         game_surface.blit(hard_high_score_text, (936, 272))
+        game_surface.blit(close_button, close_button_rect)
         if not last_score == 0:
             last_score_text = pixel_font.render("You got  {}!".format(str(last_score)), False, (0,0,0))
             last_score_text_rect = last_score_text.get_rect(center = (960, 584))
