@@ -1,6 +1,7 @@
 import pygame
 from sys import exit
 from random import randint
+import json
 
 pygame.init()
 screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
@@ -10,10 +11,26 @@ game_state = "title"
 movement_speed = 200
 last_score = 0
 score = 0
-high_score = 0
-hard_high_score = 0
 is_hard = False
 
+# Set icon
+icon = pygame.image.load("assets\\icon.png")
+pygame.display.set_icon(icon)
+
+# Music start
+pygame.mixer.music.load("music\\menu_theme.mp3")
+pygame.mixer.music.play(-1)
+
+# Load save
+try:
+    with open("save_data\\save_game.json") as save_file:
+        load_data = json.load(save_file)
+
+    high_score = load_data["high_score"]
+    hard_high_score = load_data["hard_high_score"]
+except FileNotFoundError:
+    high_score = 0
+    hard_high_score = 0
 
 class Background(pygame.sprite.Sprite):
     def __init__(self):
@@ -125,28 +142,22 @@ class Box(pygame.sprite.Sprite):
                 if self.rect.x <= -160:
                     if self.box_color == 4:
                         health += 2
-                        print(health)
                     if not self.box_color == 1:
                         health -= 1
-                        print(health)
                     self.kill()
             elif self.sorted_direction == 1:
                 if self.rect.y <= -160:
                     if self.box_color == 5:
                         health += 2
-                        print(health)
                     if not self.box_color == 2:
                         health -= 1
-                        print(health)
                     self.kill()
             elif self.sorted_direction == 2:
                 if self.rect.x >= 2080:
                     if self.box_color == 6:
                         health += 2
-                        print(health)
                     if not self.box_color == 3:
                         health -= 1
-                        print(health)
                     self.kill()
         if health == 0: self.kill()
                 
@@ -154,7 +165,6 @@ class Box(pygame.sprite.Sprite):
         self.movement()
         self.spawn_new()
         self.despawn()
-
 
 
 def fullscreen():
@@ -174,11 +184,20 @@ def check_game_over():
         play_button_index = 0
         global hard_button_index
         hard_button_index = 0
+        pygame.mixer.music.load("music\\menu_theme.mp3")
+        pygame.mixer.music.play(-1)
         global score
         return score
     else: return 0
         
-        
+
+def save_game():
+    data = {
+        "high_score" : high_score,
+        "hard_high_score" : hard_high_score
+    }
+    with open("save_data\\save_game.json", "w") as save_file:
+        json.dump(data, save_file)
 
 # Create surface to blit the game onto
 game_surface = pygame.Surface((1920, 1080))
@@ -256,6 +275,7 @@ while True:
     # Event loop
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
+            save_game()
             pygame.quit()
             exit()
         # Events during game
@@ -285,8 +305,7 @@ while True:
                         box_group.add(Box(randint(1,3)))
                 score += 1
                 if movement_speed <= 1600:
-                    movement_speed += 20
-            
+                    movement_speed += 20   
 
     
         # Events during title screen
@@ -308,6 +327,7 @@ while True:
                 if hard_button_rect.collidepoint(scaled_pos):
                     hard_button_index = 1
                 if close_button_rect.collidepoint(scaled_pos):
+                    save_game()
                     pygame.quit()
                     quit()
             elif event.type == pygame.MOUSEBUTTONUP:
@@ -320,7 +340,11 @@ while True:
                     movement_speed = 150
                     last_health = False
                     direction = [0, 1, 0]
+                    pygame.mixer.music.load("music\\game_theme.mp3")
+                    pygame.mixer.music.play(-1)
                 elif hard_button_rect.collidepoint(scaled_pos):
+                    pygame.mixer.music.load("music\\game_theme.mp3")
+                    pygame.mixer.music.play(-1)
                     game_state = "game"
                     is_hard = True
                     score = 0
@@ -361,6 +385,8 @@ while True:
                     play_button_index = 0
                     hard_button_index = 0
                     game_state = "menu"
+                    pygame.mixer.music.load("music\\menu_theme.mp3")
+                    pygame.mixer.music.play(-1)
                 else:
                     continue_button_index = 0
                     quit_button_index = 0
