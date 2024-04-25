@@ -10,6 +10,9 @@ game_state = "title"
 movement_speed = 200
 last_score = 0
 score = 0
+high_score = 0
+hard_high_score = 0
+is_hard = False
 
 
 class Background(pygame.sprite.Sprite):
@@ -169,8 +172,14 @@ def check_game_over():
         game_state = "dead"
         global game_over
         game_over = True
+        global play_button_index
+        play_button_index = 0
+        global hard_button_index
+        hard_button_index = 0
         global score
         return score
+    else: return 0
+        
         
     
 
@@ -230,7 +239,6 @@ box_event = pygame.event.Event(pygame.USEREVENT, attr1 = "box_event")
 
 # Game loop
 while True:
-    hard_button_index = 0
     # Event loop
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -254,13 +262,12 @@ while True:
                     last_health = False
                     box_group.add(Box(randint(1,3)))
                 elif last_health  == False:
-                    if randint(1, 2) == 1:
+                    if randint(1, 10) == 1:
                         last_health = True
                         box_group.add(Box(randint(4,6)))
                     else:
                         box_group.add(Box(randint(1,3)))
                 score += 1
-                # print(score)
                 if movement_speed <= 1600:
                     movement_speed += 20
 
@@ -273,12 +280,20 @@ while True:
         # Events during menu screen
         if game_state == "menu":
             # Check play button press and start game
+            pos = list(pygame.mouse.get_pos())
+            # Take the mouse position and scale it, too
+            ratio_x = (screen.get_width() / 1920)
+            ratio_y = (screen.get_height() / 1080)
+            scaled_pos = (pos[0] / ratio_x, pos[1] / ratio_y)
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if play_button_rect.collidepoint(pygame.mouse.get_pos()):
+                if play_button_rect.collidepoint(scaled_pos):
                     play_button_index = 1
-            if event.type == pygame.MOUSEBUTTONUP:
-                if play_button_rect.collidepoint(pygame.mouse.get_pos()):
+                if hard_button_rect.collidepoint(scaled_pos):
+                    hard_button_index = 1
+            elif event.type == pygame.MOUSEBUTTONUP:
+                if play_button_rect.collidepoint(scaled_pos):
                     game_state = "game"
+                    is_hard = False
                     score = 0
                     health = 2
                     pygame.time.set_timer(box_event, 1000, 1)
@@ -286,11 +301,23 @@ while True:
                     last_health = False
                     direction = [0, 1, 0]
                     game_over = False
+                elif hard_button_rect.collidepoint(scaled_pos):
+                    game_state = "game"
+                    is_hard = True
+                    score = 0
+                    health = 2
+                    pygame.time.set_timer(box_event, 1000, 1)
+                    movement_speed = 1700
+                    last_health = False
+                    direction = [0, 1, 0]
+                    game_over = False
                 else:
                     play_button_index = 0
-            # if event.key == pygame.K_ESCAPE:
-            #     pygame.quit()
-            #     exit()
+                    hard_button_index = 0
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    exit()
         
         # Events during game over screen
         if game_state == "dead":
@@ -313,10 +340,14 @@ while True:
         game_surface.blit(heart1_surf, heart1_rect)
         if health == 2: game_surface.blit(heart2_surf, heart2_rect)
 
-        score_text = pixel_font.render("Score: {}".format(score), False, (0,0,0))
+        score_text = pixel_font.render("Score:  {}".format(score), False, (0,0,0))
         game_surface.blit(score_text, score_text_rect)
 
         last_score = check_game_over()
+        if is_hard: 
+            if last_score > hard_high_score:
+                hard_high_score = last_score
+        elif last_score > high_score: high_score = last_score 
 
     
     # Display title screen
@@ -334,6 +365,16 @@ while True:
         game_surface.blit(menu_surf, (0,0))
         game_surface.blit(play_button_frames[play_button_index], play_button_rect)
         game_surface.blit(hard_button_frames[hard_button_index], hard_button_rect)
+        high_score_text = pixel_font.render("High score:  {}".format(str(high_score)), False, (0,0,0))
+        hard_high_score_text = pixel_font.render("Hard score:  {}".format(str(hard_high_score)), False, (0,0,0))
+        game_surface.blit(high_score_text, (936, 128))
+        game_surface.blit(hard_high_score_text, (936, 272))
+        if not last_score == 0:
+            last_score_text = pixel_font.render("You got  {}!".format(str(last_score)), False, (0,0,0))
+            last_score_text_rect = last_score_text.get_rect(center = (960, 584))
+            game_surface.blit(last_score_text, last_score_text_rect)
+
+
 
     
     # Display game over screen
