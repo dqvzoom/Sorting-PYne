@@ -329,7 +329,7 @@ while True:
                 if close_button_rect.collidepoint(scaled_pos):
                     save_game()
                     pygame.quit()
-                    quit()
+                    exit()
             elif event.type == pygame.MOUSEBUTTONUP:
                 if play_button_rect.collidepoint(scaled_pos):
                     game_state = "game"
@@ -356,10 +356,6 @@ while True:
                 else:
                     play_button_index = 0
                     hard_button_index = 0
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    pygame.quit()
-                    exit()
         
         # Events during pause screen
         if game_state == "paused":
