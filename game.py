@@ -170,8 +170,6 @@ def check_game_over():
     if health == 0: 
         global game_state
         game_state = "dead"
-        global game_over
-        game_over = True
         global play_button_index
         play_button_index = 0
         global hard_button_index
@@ -181,8 +179,6 @@ def check_game_over():
     else: return 0
         
         
-    
-
 
 # Create surface to blit the game onto
 game_surface = pygame.Surface((1920, 1080))
@@ -234,6 +230,21 @@ hard_button_frames = [hard_button_1, hard_button_2]
 hard_button_index = 0
 hard_button_rect = play_button_1.get_rect(topleft = (984, 800))
 
+# Pause screen
+pause_surf = pygame.image.load("assets\\pause_screen.png").convert_alpha()
+
+continue_button_1 = pygame.image.load("assets\\pause_continue1.png").convert_alpha()
+continue_button_2 = pygame.image.load("assets\\pause_continue2.png").convert_alpha()
+continue_button_frames = [continue_button_1, continue_button_2]
+continue_button_index = 0
+continue_button_rect = continue_button_1.get_rect(topleft = (680, 496))
+
+quit_button_1 = pygame.image.load("assets\\pause_quit1.png").convert_alpha()
+quit_button_2 = pygame.image.load("assets\\pause_quit2.png").convert_alpha()
+quit_button_frames = [quit_button_1, quit_button_2]
+quit_button_index = 0
+quit_button_rect = quit_button_1.get_rect(topleft = (680, 664))
+
 # Events
 box_event = pygame.event.Event(pygame.USEREVENT, attr1 = "box_event")
 
@@ -247,15 +258,17 @@ while True:
         # Events during game
         if game_state == "game":
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    pygame.quit()
-                    exit()
+                if event.key == pygame.K_ESCAPE:
+                    continue_button_index = 0
+                    quit_button_index = 0
+                    game_state = "paused"
                 if event.key in (pygame.K_a, pygame.K_LEFT) :
                     direction = [1, 0, 0]
                 if event.key in (pygame.K_w, pygame.K_UP):
                     direction = [0, 1, 0]
                 if event.key in (pygame.K_d, pygame.K_RIGHT):
                     direction = [0, 0, 1]
+
             # User events
             if event == box_event:
                 if health == 2 or last_health == True:
@@ -270,6 +283,7 @@ while True:
                 score += 1
                 if movement_speed <= 1600:
                     movement_speed += 20
+            
 
     
         # Events during title screen
@@ -300,7 +314,6 @@ while True:
                     movement_speed = 150
                     last_health = False
                     direction = [0, 1, 0]
-                    game_over = False
                 elif hard_button_rect.collidepoint(scaled_pos):
                     game_state = "game"
                     is_hard = True
@@ -310,7 +323,6 @@ while True:
                     movement_speed = 1700
                     last_health = False
                     direction = [0, 1, 0]
-                    game_over = False
                 else:
                     play_button_index = 0
                     hard_button_index = 0
@@ -319,6 +331,35 @@ while True:
                     pygame.quit()
                     exit()
         
+        # Events during pause screen
+        if game_state == "paused":
+            # Check play button press and start game
+            pos = list(pygame.mouse.get_pos())
+            # Take the mouse position and scale it, too
+            ratio_x = (screen.get_width() / 1920)
+            ratio_y = (screen.get_height() / 1080)
+            scaled_pos = (pos[0] / ratio_x, pos[1] / ratio_y)
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if continue_button_rect.collidepoint(scaled_pos):
+                    continue_button_index = 1
+                if quit_button_rect.collidepoint(scaled_pos):
+                    quit_button_index = 1
+            elif event.type == pygame.MOUSEBUTTONUP:
+                if continue_button_rect.collidepoint(scaled_pos):
+                    game_state = "game"
+                    if score == 0:
+                        pygame.event.post(box_event)
+                elif quit_button_rect.collidepoint(scaled_pos):
+                    health = 0
+                    box_group.update()
+                    play_button_index = 0
+                    hard_button_index = 0
+                    game_state = "menu"
+                else:
+                    continue_button_index = 0
+                    quit_button_index = 0
+
+
         # Events during game over screen
         if game_state == "dead":
             if event.type == pygame.KEYUP:
@@ -374,7 +415,19 @@ while True:
             last_score_text_rect = last_score_text.get_rect(center = (960, 584))
             game_surface.blit(last_score_text, last_score_text_rect)
 
+    # Display pause screen
+    elif game_state == "paused":
+        background.draw(game_surface)
+        background.update()
+        game_surface.blit(pause_surf, (0,0))
+        game_surface.blit(continue_button_frames[continue_button_index], continue_button_rect)
+        game_surface.blit(quit_button_frames[quit_button_index], quit_button_rect)
 
+        game_surface.blit(heart1_surf, heart1_rect)
+        if health == 2: game_surface.blit(heart2_surf, heart2_rect)
+
+        score_text = pixel_font.render("Score:  {}".format(score), False, (0,0,0))
+        game_surface.blit(score_text, score_text_rect)
 
     
     # Display game over screen
